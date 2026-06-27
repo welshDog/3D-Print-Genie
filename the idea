@@ -1,0 +1,381 @@
+Right bro — proper deep dive incoming. Let me lay it all out clearly. Brilliant timing to move to the Kobra X, but there's one critical thing you need to know first.
+
+⚠️ Big heads up: Kobra X + OctoPrint
+The Kobra X does NOT natively support OctoPrint, Klipper, Mainsail, or Fluidd. Most of the AI failure detection tools on GitHub are built around OctoPrint or Klipper, so this limits your options compared to a printer like the Kobra Max 3. The one monitoring platform confirmed compatible with the Kobra X is SimplyPrint. This doesn't kill your plan — it just shapes which tools you reach for first.
+
+🥇 The best GitHub repos for your mission
+Here's every relevant open-source project, ranked by how useful it is for your Kobra X setup:
+
+1. 🔥 PrintGuard — 
+oliverbravery/PrintGuard
+This is the one, bro. It's the most complete, most modern, and most perfectly matched to your stack.
+
+Key facts:
+
+Single Docker container — runs on a Raspberry Pi 4/5 or any AMD64/ARM64 machine
+
+No cloud, no subscription, no account — frames never leave your hardware
+
+Detects: spaghetti, detachments, blobs, warping — scores every camera frame in real time
+
+Auto-pauses or cancels print when a sustained defect is detected
+
+Sends alerts via Telegram, Discord, or ntfy push to your phone
+
+Works with OctoPrint, Klipper (Moonraker), and Bambu Lab — and via a REST API/MCP protocol, so you can connect other printers too
+
+Home Assistant integration via MQTT — plays nicely with automations
+
+MCP server built in — meaning you can point Claude or an IDE at it and automate everything
+
+Try it in your browser right now with zero install: oliverbravery.github.io/PrintGuard
+
+Install command (single line on Pi/Linux):
+
+bash
+docker run -d --name printguard --restart unless-stopped \
+  -p 8000:8000 \
+  -v printguard:/data \
+  ghcr.io/oliverbravery/printguard
+The AI model inside is a ShuffleNetV2 encoder trained specifically for FDM fault detection — it's fast, lightweight, and runs fully on-device .
+
+2. 🕵️ Obico (formerly The Spaghetti Detective) — 
+TheSpaghettiDetective/obico-server
+The most widely used AI print monitoring platform in 2026. Supports OctoPrint and Klipper natively, self-hosted via Docker. Since Kobra X doesn't do OctoPrint natively, this is harder to hook up — but if you ever flash Klipper on the Kobra X (some Anycubic owners have done this on other Kobra variants ), Obico becomes an option. The mobile app is polished and free for basic use.
+
+3. ⚡ klipper-print-failure-detection — 
+CookiezRGood/klipper-print-failure-detection
+A newer local AI failure detector specifically for Klipper . Uses a TensorFlow Lite model to detect spaghetti, blobs, cracks, and warping. Runs fully locally — no cloud. 23 stars on GitHub, updated June 2026 . Only relevant if you move to Klipper firmware.
+
+4. 👀 OctoPrint-PiNozCam — 
+DrAlexLiu/OctoPrint-PiNozCam
+AI-powered camera monitoring on a Raspberry Pi for OctoPrint — also sends failure alerts via Telegram and Discord, free, no subscription. Not useful for stock Kobra X but worth knowing for future builds.
+
+5. 🔬 PrintWatch — 
+OctoPrint Plugin
+Uses ML to detect failures, works with all filaments, colours, and printer types. Again, OctoPrint-dependent — worth flagging for if/when you expand the printer fleet.
+
+6. 🛡️ 3D Print Sentinel — oliverbravery/3D-Print-Sentinel
+Earlier project from the same dev as PrintGuard — runs the same Obico ML model locally on device. PrintGuard supersedes this, but it's useful reference code.
+
+7. 🔎 Failure Detection Computer Vision — 
+alexgrigoras/failure_detection_for_3d_printing
+Research-level project using image matching (comparing slicer preview vs real print), object tracking, and spaghetti detection. More academic but useful if you want to build your own model.
+
+🧩 What your Kobra X stack should look like
+Given OctoPrint isn't compatible, here's the realistic path forward:
+
+Layer	Tool	Notes
+Print management	Anycubic app / native	Stock firmware on Kobra X 
+AI failure detection	PrintGuard (Docker on Pi)	Camera-only, no OctoPrint needed
+Cloud/managed option	SimplyPrint	Only confirmed Kobra X compatible manager 
+Preflight checks	Meshy Printability API	Free, checks STL before slicing 
+Slicer	OrcaSlicer (or Anycubic slicer)	OrcaSlicer available online for Kobra X 
+Alerts	Telegram / Discord via PrintGuard	Free, instant phone alerts
+Print history	SQLite log in PrintGuard	Build on top of this
+🔧 Quick wins for the Kobra X today (before software)
+Based on real Kobra X community reports:
+
+Wash the build plate before every print — one owner reported 130 hours with zero issues after doing just this
+
+Tighten the eccentric nuts — loose wheels = rattling = layer shifts
+
+Check belt tension — should feel like a guitar string, not floppy
+
+Clean and lube the linear rails with PTFE or light machine oil if they feel gritty
+
+Use Anycubic's own slicer to start — known profiles for the Kobra X already baked in
+
+Reduce acceleration to 1500–2000 and infill speed to 120–150 mm/s if you hear rattling during fast infill
+
+🏗️ What we can build on top
+Since PrintGuard has an MCP server and REST API built in , you can wire up a layer of your own intelligence on top:
+
+STL preflight → Meshy API checks model before slicing
+
+Profile selector → CLI picks the right slicer profile for your filament + model geometry
+
+PrintGuard → catches failures live via camera
+
+Outcome logger → stores each job result for learning
+
+Discord/Telegram bot → reports print health to your community
+
+That's a full open-source, no-subscription, self-hosted Print Guardian — and since PrintGuard already has Claude/MCP integration baked in, you could literally ask Claude "how's my print going?" and it would answer from your live camera feed .
+
+⚡ Action plan for today
+Set up the Kobra X physically: tighten rails, wash plate, check belts
+
+Pull the PrintGuard Docker image onto your Raspberry Pi
+
+Mount a webcam on the Kobra X, point it at the print bed
+
+Hook PrintGuard to your Telegram or Discord for instant alerts
+
+Test print a known model, confirm PrintGuard sees it and auto-pauses on failure
+
+Want me to write the exact docker-compose.yml, Kobra X camera mount setup, and Telegram bot config to get PrintGuard running tonight, mate? 🔥
+
+yes please bro do your best please
+Completed 6 steps
+Print Guardian Architecture
+Print Guardian Architecture
+Chart
+Test Kaleido
+Test Kaleido
+Chart
+Print Guardian Arch Final
+Print Guardian Arch Final
+Chart
+Right bro — here's the complete build guide for your Kobra X Print Guardian stack. Everything you need from Pi setup to Telegram alerts, ready to copy-paste and run tonight. Let's gooo! 🔥
+
+🛒 What you need first
+Hardware shopping list:
+
+Raspberry Pi 4 (2GB+ RAM) — you likely already have one
+
+USB webcam — a Logitech C270 (~£20) is perfect; mounts easily on the Kobra X frame
+
+USB-C power for Pi, MicroSD (16GB+), ethernet or WiFi
+
+📋 Step 1 — Prep the Raspberry Pi
+Flash Raspberry Pi OS Lite (64-bit) to your SD card using Raspberry Pi Imager. Enable SSH and WiFi in the imager settings before flashing so you can SSH in wirelessly from day one.
+
+bash
+# SSH into your Pi first time
+ssh pi@raspberrypi.local
+
+# Update everything
+sudo apt update && sudo apt upgrade -y
+
+# Install Docker + Docker Compose in one go
+curl -fsSL https://get.docker.com | sh
+sudo usermod -aG docker $USER
+sudo apt install -y docker-compose-plugin
+newgrp docker
+
+# Verify Docker works
+docker run hello-world
+🐳 Step 2 — Install PrintGuard (Docker)
+This is the AI failure detection engine — one file, one command :
+
+bash
+# Make a folder for PrintGuard
+mkdir ~/printguard && cd ~/printguard
+
+# Create docker-compose.yml
+nano docker-compose.yml
+Paste this exactly:
+
+text
+version: "3.8"
+
+services:
+  printguard:
+    image: ghcr.io/oliverbravery/printguard:latest
+    container_name: printguard
+    restart: unless-stopped
+    ports:
+      - "8000:8000"     # Web dashboard
+      - "8554:8554"     # RTSP camera push (optional)
+      - "1935:1935"     # RTMP camera push (optional)
+    volumes:
+      - printguard_data:/data
+    devices:
+      - /dev/video0:/dev/video0   # USB webcam — check with: ls /dev/video*
+    privileged: false
+
+volumes:
+  printguard_data:
+Save with Ctrl+X → Y → Enter, then launch:
+
+bash
+docker compose up -d
+
+# Check it's running
+docker compose logs -f printguard
+Open http://<your-pi-ip>:8000 in your browser — the PrintGuard dashboard is live .
+
+Find your Pi's IP: run hostname -I in the Pi terminal
+
+📷 Step 3 — Mount and connect the webcam
+Physical mount on Kobra X:
+
+Clip or zip-tie the webcam to the top frame bar pointing straight down at the print bed
+
+Aim to get the whole bed in frame — test at http://<pi-ip>:8000
+
+Check the camera is detected:
+
+bash
+ls /dev/video*
+# Should show: /dev/video0 (and maybe /dev/video1 etc.)
+
+# Test a snapshot
+sudo apt install -y fswebcam
+fswebcam -r 1280x720 test.jpg
+# Check test.jpg landed in your home folder
+Inside PrintGuard dashboard:
+
+Go to Cameras → Add Camera
+
+Choose "This device" (uses the Pi's webcam directly)
+
+Test the live feed appears — adjust physical camera angle until full bed is visible
+
+🖨️ Step 4 — Connect Kobra X to PrintGuard
+Since the Kobra X doesn't support OctoPrint natively, PrintGuard watches purely via camera — and that's fine. The AI scores every camera frame regardless of what software drives the printer .
+
+In PrintGuard dashboard:
+
+Go to Printers → Add Printer
+
+Choose "Camera Only" mode — no serial/API connection needed
+
+Name it Kobra X
+
+Bind it to your camera feed
+
+Go to Monitors → Add Monitor → link camera + printer
+
+Now set your sensitivity thresholds:
+
+Sensitivity: start at 0.7 (medium — avoids false alarms)
+
+Sustained frames before action: 10-15 frames (prevents false pauses on shadows)
+
+Action on failure: Notify only first, then move to Pause once you're confident
+
+📲 Step 5 — Telegram bot for instant phone alerts
+This gets you a snapshot + alert on your phone the second something goes wrong:
+
+Create your Telegram bot:
+
+Open Telegram → search @BotFather
+
+Send /newbot
+
+Give it a name e.g. KobraX Guardian
+
+Copy the API token it gives you (looks like 1234567890:ABCdef...)
+
+Get your chat ID: message @userinfobot on Telegram → it replies with your ID
+
+Hook into PrintGuard:
+
+In PrintGuard dashboard → Settings → Notifications → Telegram
+
+Paste your bot token + chat ID
+
+Click Test — you should get a test message on your phone within seconds
+
+You can also use Discord if that's easier for your workflow — same process, just paste a Discord webhook URL instead .
+
+🔍 Step 6 — STL preflight check before every print
+Before you slice anything, run a quick printability check on the model:
+
+python
+# Install the requests library
+pip install requests
+
+# preflight_check.py — drop your STL URL in here
+import requests
+
+def check_printability(stl_url):
+    resp = requests.post(
+        "https://api.meshy.ai/openapi/v1/3d-model/analyze-printability",
+        json={"model_url": stl_url},
+        headers={"Authorization": "Bearer YOUR_MESHY_API_KEY"}
+    )
+    result = resp.json()
+    print("Printability result:", result)
+    return result
+
+# Example usage
+check_printability("https://yourfile.com/model.stl")
+Meshy API is free for printability checks — sign up at meshy.ai to get your API key
+
+This catches:
+
+Non-manifold (broken) geometry
+
+Holes in the mesh
+
+Extremely thin walls
+
+Degenerate faces
+
+If it fails, fix the model in Meshmixer or PrusaSlicer's repair tool before slicing.
+
+🧩 Step 7 — Slicer setup for Kobra X
+Use OrcaSlicer — it's free, open-source, and has the most accurate Kobra X profiles:
+
+Download: github.com/SoftFever/OrcaSlicer
+
+Safe starting profile for Kobra X + PLA:
+
+Setting	Value
+Layer height	0.2 mm
+Print speed	150 mm/s max
+First layer speed	30 mm/s
+Infill	15% gyroid
+Supports	Tree (auto)
+Bed temp	60°C + 30 min heat soak
+Nozzle temp	215°C
+Cooling	100% from layer 3
+Z-offset	Tune with paper test
+The golden rule: run a first layer calibration before every new filament spool. Don't skip this.
+
+🔁 Step 8 — Print log (track every job)
+Add a tiny SQLite log so you know what worked and what didn't, and can spot patterns:
+
+python
+# print_log.py
+import sqlite3
+from datetime import datetime
+
+conn = sqlite3.connect("print_history.db")
+conn.execute("""
+CREATE TABLE IF NOT EXISTS prints (
+    id INTEGER PRIMARY KEY,
+    date TEXT,
+    model TEXT,
+    filament TEXT,
+    profile TEXT,
+    duration_mins INTEGER,
+    result TEXT,    -- 'success', 'failure', 'paused'
+    failure_type TEXT,  -- 'spaghetti', 'adhesion', 'warp', etc.
+    notes TEXT
+)
+""")
+
+def log_print(model, filament, profile, duration, result, failure_type="", notes=""):
+    conn.execute(
+        "INSERT INTO prints VALUES (NULL,?,?,?,?,?,?,?,?)",
+        (datetime.now().isoformat(), model, filament, profile, duration, result, failure_type, notes)
+    )
+    conn.commit()
+    print(f"✅ Logged: {model} — {result}")
+
+# Example
+log_print("benchy.stl", "PLA Hatchbox White", "KobraX_PLA_safe", 90, "success")
+Run this after every print — even if it's just 30 seconds of effort. After 20–30 prints you'll have a goldmine of data to spot patterns and tune further.
+
+🏁 Tonight's action checklist
+text
+[ ] Attach webcam to Kobra X frame (zip tie to top bar)
+[ ] SSH into Raspberry Pi
+[ ] Install Docker (curl command above)
+[ ] mkdir ~/printguard && create docker-compose.yml
+[ ] docker compose up -d
+[ ] Open http://<pi-ip>:8000 — confirm dashboard loads
+[ ] Add camera → confirm live feed
+[ ] Create Telegram bot via @BotFather
+[ ] Paste token into PrintGuard settings → test alert
+[ ] Download OrcaSlicer → load Kobra X profile
+[ ] Run first layer calibration on Kobra X
+[ ] Test print a small model — confirm PrintGuard watches it
+[ ] Log the result in print_history.db
+That's your full stack, bro — from raw STL to AI-watched print to instant phone alert, fully open-source, zero subscription, all running on your Pi. This is the foundation of something anyone with a 3D printer could use. 🔥
+
+Want me to also write the Telegram bot wrapper that lets you send /status, /pause, /cancel commands back to the printer from your phone?

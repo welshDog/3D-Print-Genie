@@ -1,0 +1,46 @@
+# Print Genie — Phase 1: PrintGuard on the Raspberry Pi.
+# Host: Raspberry Pi OS Lite 64-bit (ARM64). The /dev/video0 device mapping is correct for
+# Pi/Linux — find your camera with: ls /dev/video*
+#
+# Usage:
+#   cp .env.example .env   # then paste your Discord webhook + tokens
+#   docker compose up -d
+#   docker compose logs -f printguard
+#   open http://<pi-ip>:8000
+
+services:
+  printguard:
+    image: ghcr.io/oliverbravery/printguard:latest
+    container_name: printguard
+    restart: unless-stopped
+    ports:
+      - "8000:8000"     # Web dashboard
+      - "8554:8554"     # RTSP camera push (optional)
+      - "1935:1935"     # RTMP camera push (optional)
+    volumes:
+      - printguard_data:/data
+    devices:
+      - /dev/video0:/dev/video0   # USB webcam — check with: ls /dev/video*
+    environment:
+      # PrintGuard reads alert config from its own dashboard (Settings → Notifications),
+      # but we surface the Discord webhook here so it's documented + versioned via .env.
+      - PRINTGUARD_DISCORD_WEBHOOK_URL=${DISCORD_WEBHOOK_URL:-}
+    privileged: false
+
+  # Phase 2/3 glue service. Receives PrintGuard webhooks, writes to Supabase, runs Meshy
+  # preflight, and awards BROski XP. Disabled by default until Phase 2 — bring it up with:
+  #   docker compose --profile glue up -d
+  printgenie:
+    build: ../service
+    container_name: printgenie
+    restart: unless-stopped
+    profiles: ["glue"]
+    ports:
+      - "8011:8011"
+    env_file:
+      - .env
+    depends_on:
+      - printguard
+
+volumes:
+  printguard_data:
