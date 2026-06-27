@@ -75,25 +75,30 @@ SQL file: db/migrations/0001_print_genie.sql
 | **Secrets in `.env` only** — never commit keys | `.env` is gitignored; `.env.example` is safe |
 | **DB changes via MCP `apply_migration`** | `supabase db push` desyncs migration history |
 | **Auto-pause stays `AUTO_PAUSE_ENABLED=false`** until the Kobra X spike is proven | Camera-only cannot pause the X — see `spikes/anycubic_cloud_pause.md` |
-| **`service/app/pause.py` is a no-op stub** | Fill it in only after Phase-4 spike confirms the cloud MQTT schema |
+| **`service/app/pause.py` is implemented but OFF by default** | Real `try_cloud_pause` (cooldown-gated, pause-only); only fires when `AUTO_PAUSE_ENABLED=true` and creds are set |
 | **XP `source_id=print:<job_id>`** must be stable | Retries/replays must bank exactly once (same pattern as git-commit XP hooks) |
 | **Alert path must never crash** | Supabase writes are fail-soft — a DB blip must never silence a Discord alert |
 
 ---
 
-## Phase 4 — closed-loop pause spike
+## Phase 4 — closed-loop pause (schema mapped, hardware-test pending)
 
-The most wanted feature. See **`spikes/anycubic_cloud_pause.md`** for the full research.
-Short version:
+The most wanted feature. The schema is already **mapped and coded** — see
+**`spikes/anycubic_cloud_pause.md`** for the full research. Key facts:
 
-1. Stand up `WaresWichall/hass-anycubic_cloud` against your real account.
-2. Confirm the Kobra X appears and capture its `printer_id`.
-3. Subscribe to the cloud status topic (read-only, zero risk).
-4. Test a `pause` command on a throwaway print.
-5. If step 4 works: fill in `service/app/pause.py:try_cloud_pause()` and open a PR.
-6. If it doesn't: document what you found and open an issue — that evidence is still valuable.
+- Pause is a **REST call**: `POST /work/operation/sendOrder` with `{"order_id": 2, "printer_id", "project_id"}` — **not** raw MQTT.
+- We **reuse** the maintained `WaresWichall/hass-anycubic_cloud` client (`pause_print`) — do **not** reimplement the Anycubic app-signing. That client is **GPL**, so keep it a *runtime* dependency (cloned + `ANYCUBIC_CLOUD_API_PATH`), never copied into this MIT repo.
+- `service/app/pause.py::try_cloud_pause()` is **already implemented** (off by default, cooldown-gated, pause-only).
 
-**Do not ship auto-pause without step 4 being reproducible on the Kobra X.**
+What's left is to **verify on a real Kobra X** (it may differ from its proven sibling, the Kobra S1):
+
+1. Clone `hass-anycubic_cloud`; capture a one-time access token.
+2. Run `python spikes/probe_anycubic.py` (read-only) → confirm the Kobra X appears, copy its `printer_id`.
+3. Run `python spikes/probe_anycubic.py --pause` on a throwaway print → confirm it pauses on the panel.
+4. If step 3 works: set `ANYCUBIC_*` + `AUTO_PAUSE_ENABLED=true` and open a PR with what you tested.
+5. If it doesn't: document the delta in the spike doc and open an issue — that evidence is still valuable.
+
+**Do not enable auto-pause without step 3 being reproducible on the Kobra X.**
 
 ---
 
