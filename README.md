@@ -98,8 +98,11 @@ PrintGuard is consumed as an **upstream Docker image** — we do **not** fork it
   prints become `print_jobs`; Meshy preflight verdict stored per job.
 - **Phase 3 — MCP + economy.** MCP tools (`print_status`, `recent_jobs`, `job_stats`); `success`
   events award BROski XP via core `/economy/award-dev-xp` with `source_id=print:<job_id>` dedup.
-- **Phase 4 — Closed-loop auto-pause spike.** Investigate Anycubic **cloud** MQTT pause/cancel (proven
-  on the sibling Kobra S1; schema unconfirmed on the X). See `spikes/anycubic_cloud_pause.md`.
+- **Phase 4 — Closed-loop auto-pause.** ✅ Schema mapped: pause = REST `sendOrder(order_id=2)` via the
+  maintained `anycubic_cloud_api` client (`pause_print`). Run `spikes/probe_anycubic.py` to discover
+  your printer_id, then test on a throwaway print before enabling `AUTO_PAUSE_ENABLED`. Adapter lives
+  in `service/app/pause.py` (off by default, cooldown-gated, pause-only). See
+  `spikes/anycubic_cloud_pause.md`.
 
 ---
 
