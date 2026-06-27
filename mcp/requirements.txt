@@ -1,2 +1,4 @@
-mcp[cli]>=1.2.0
-httpx==0.28.1
+# Print Genie MCP server dependencies
+# Install: pip install -r mcp/requirements.txt
+mcp[cli]>=1.0.0
+httpx>=0.28.1
