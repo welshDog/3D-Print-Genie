@@ -88,6 +88,9 @@ PrintGuard is consumed as an **upstream Docker image** — we do **not** fork it
 
 ## 🚦 Roadmap (phased)
 
+> 📋 Live checklist + status: **[`PROJECT_BOARD.md`](PROJECT_BOARD.md)**
+
+
 - **Phase 0 — Physical + browser demo (no code).** Tune the Kobra X (wash plate, belt tension,
   eccentric nuts, lube rails, first-layer calibration). Mount webcam. Try
   [the browser PrintGuard demo](https://oliverbravery.github.io/PrintGuard) to sanity-check detection
