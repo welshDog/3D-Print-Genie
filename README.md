@@ -103,6 +103,11 @@ PrintGuard is consumed as an **upstream Docker image** — we do **not** fork it
 
 ---
 
+## 🍓 Full Pi setup
+
+For the complete copy-paste walkthrough (blank SD card → Discord spaghetti alert), see
+**[`docs/PI_RUNBOOK.md`](docs/PI_RUNBOOK.md)**. Short version below.
+
 ## 🔧 Quick start (Phase 1, on the Pi)
 
 ```bash
