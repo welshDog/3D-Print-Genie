@@ -50,11 +50,14 @@ Phase checklist + status for the Kobra X Print Guardian. Tick boxes as you go.
       `supabase db query --linked` (MCP token is tlav-scoped now; `db query` also avoids
       polluting the shop repo's migration history). Verified: RLS on, service_role granted,
       anon locked out, FK smoke insert/delete green.
-- [ ] Dashboard one-time: add `print_genie` to API **Exposed schemas** (Project Settings →
-      Data API) so the glue service's profile headers resolve
-- [ ] Fill `SUPABASE_*` (jnrk URL + service-role key) + `MESHY_API_KEY` in `.env`
-- [ ] `docker compose --profile glue up -d`
-- [ ] ✅ Acceptance: finished print → `print_jobs` row; broken STL → non-manifold flagged
+- [x] `print_genie` added to jnrk API **Exposed schemas** — done 2026-07-02 via Management API
+      PATCH (dashboard save had landed on the wrong project; verified anon=42501 denied,
+      service_role=200)
+- [x] `SUPABASE_*` (jnrk) filled in `service/.env` (gitignored) — `MESHY_API_KEY` still todo
+- [x] ✅ **LIVE E2E against jnrk 2026-07-02**: simulator detection → real `print_events` row
+      (FK'd to job) → finish → `print_jobs.result=success`. Test rows cleaned after proof.
+- [ ] On the Pi: `docker compose --profile glue up -d` (copy the same .env)
+- [ ] ✅ Acceptance (needs Meshy key): broken STL → non-manifold flagged
 
 ## Phase 2.5 — Hardware-free E2E harness  ✅ (2026-07-02)
 *Everything provable before the Pi arrives is now proven. `tools/simulate_printguard.py` + `tests/`.*
