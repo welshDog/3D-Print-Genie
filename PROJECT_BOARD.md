@@ -46,8 +46,13 @@ Phase checklist + status for the Kobra X Print Guardian. Tick boxes as you go.
 - [x] Write `print_jobs` / `print_events` migration (RLS owner-only)
 - [x] Build FastAPI webhook receiver + Supabase writer
 - [x] Build corrected **async** Meshy preflight client
-- [ ] Apply migration via Supabase MCP `apply_migration` (NOT `db push`)
-- [ ] Fill `SUPABASE_*` + `MESHY_API_KEY` in `.env`
+- [x] Apply migration to **jnrk** (Hyperfocus-Home-Page project) — done 2026-07-02 via
+      `supabase db query --linked` (MCP token is tlav-scoped now; `db query` also avoids
+      polluting the shop repo's migration history). Verified: RLS on, service_role granted,
+      anon locked out, FK smoke insert/delete green.
+- [ ] Dashboard one-time: add `print_genie` to API **Exposed schemas** (Project Settings →
+      Data API) so the glue service's profile headers resolve
+- [ ] Fill `SUPABASE_*` (jnrk URL + service-role key) + `MESHY_API_KEY` in `.env`
 - [ ] `docker compose --profile glue up -d`
 - [ ] ✅ Acceptance: finished print → `print_jobs` row; broken STL → non-manifold flagged
 

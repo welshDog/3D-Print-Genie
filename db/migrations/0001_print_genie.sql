@@ -52,3 +52,13 @@ alter table print_genie.print_events enable row level security;
 
 -- Intentionally NO permissive policies for anon/authenticated — all access is via service-role.
 -- Add a per-user policy here later if a client UI is built.
+
+-- Custom schemas get NO grants by default on Supabase — service_role needs explicit ones or
+-- PostgREST profile-header requests fail with "permission denied". anon/authenticated get
+-- nothing (locked out by both missing grants and RLS-without-policies).
+grant usage on schema print_genie to service_role;
+grant all on all tables in schema print_genie to service_role;
+alter default privileges in schema print_genie grant all on tables to service_role;
+
+-- NOTE (dashboard, one-time): add `print_genie` to API "Exposed schemas"
+-- (Project Settings → Data API) or the Accept-Profile/Content-Profile headers won't resolve.
