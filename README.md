@@ -80,6 +80,9 @@ PrintGuard is consumed as an **upstream Docker image** — we do **not** fork it
 ├─ mcp/                      ← Print Genie MCP server (Phase 3)
 │  ├─ server.py
 │  └─ requirements.txt
+├─ tools/
+│  └─ simulate_printguard.py ← FAKE PRINTER: prove the whole glue loop with no hardware
+├─ tests/                    ← 33 no-network tests (auth, XP dedup, Meshy flow, pause rails)
 └─ spikes/
    └─ anycubic_cloud_pause.md  ← Phase 4 research + adapter plan
 ```
@@ -126,6 +129,21 @@ docker compose logs -f printguard
 ```
 
 See `docker/.env.example` and `spikes/` for the rest.
+
+## 🧪 Prove the glue loop with NO hardware (works today, on any machine)
+
+The fake printer drives the full Phase 2/3 path — webhook auth → event log → Discord alert →
+finish → BROski XP — without a Kobra X, Pi, or any creds (everything is fail-soft):
+
+```bash
+cd service && python -m uvicorn app.main:app --port 8011   # terminal 1
+python tools/simulate_printguard.py scenario               # terminal 2, from repo root
+```
+
+Use `127.0.0.1` (not `localhost`) in URLs on Windows. All mutating endpoints
+(`/webhook/printguard`, `/jobs/{id}/finish`, `/preflight`) require the
+`X-PrintGenie-Secret` header (`PRINTGENIE_WEBHOOK_SECRET`); the read-only endpoints the MCP
+server uses (`/health`, `/jobs`, `/status`) stay open. Run the test suite with `pytest -q`.
 
 ---
 

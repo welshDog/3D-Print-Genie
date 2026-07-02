@@ -13,6 +13,7 @@ Phase checklist + status for the Kobra X Print Guardian. Tick boxes as you go.
 | 0 — Physical + browser demo | ⬜ todo (needs Pi/printer) | Tune printer, mount cam, LAN Mode on, browser sanity-check |
 | 1 — Detection + Discord alert | 🔨 scaffolded | PrintGuard on Pi → spaghetti alert on phone |
 | 2 — Supabase log + Meshy preflight | 🔨 scaffolded | Job log + STL printability check |
+| 2.5 — Hardware-free E2E harness | ✅ done (2026-07-02) | Fake printer + 33 tests prove the glue loop with no hardware |
 | 3 — MCP + BROski economy | 🔨 scaffolded | "How's my print going?" + XP per success |
 | 4 — Closed-loop auto-pause | 🅿️ parked (schema mapped) | Pause the X via Anycubic cloud |
 
@@ -49,6 +50,17 @@ Phase checklist + status for the Kobra X Print Guardian. Tick boxes as you go.
 - [ ] Fill `SUPABASE_*` + `MESHY_API_KEY` in `.env`
 - [ ] `docker compose --profile glue up -d`
 - [ ] ✅ Acceptance: finished print → `print_jobs` row; broken STL → non-manifold flagged
+
+## Phase 2.5 — Hardware-free E2E harness  ✅ (2026-07-02)
+*Everything provable before the Pi arrives is now proven. `tools/simulate_printguard.py` + `tests/`.*
+
+- [x] Fake printer CLI: detection (both payload variants), finish, preflight, full scenario
+- [x] Secret auth extended to **all** mutating endpoints (`/jobs/{id}/finish`, `/preflight` were open)
+- [x] `/status` made genuinely fail-soft (Supabase outage no longer 500s the MCP path)
+- [x] `config.py` reads env at init (testable via monkeypatch + `get_settings.cache_clear()`)
+- [x] Test suite 5 → 33: auth, webhook parsing variants, XP dedup wiring, economy payload,
+      Meshy create→poll→timeout flow, pause safety rails, MCP `job_stats` rollup
+- [x] Live local run verified: uvicorn on :8011 + simulator scenario → all 200s, bad secret → 401
 
 ## Phase 3 — MCP + BROski economy  🔨
 *Code ready: `mcp/server.py`, `service/app/economy.py`.*

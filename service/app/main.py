@@ -91,8 +91,14 @@ async def printguard_webhook(
 
 
 @app.post("/jobs/{job_id}/finish")
-async def finish_job(job_id: str, body: dict[str, Any]) -> dict[str, Any]:
-    """Mark a print finished. On success, bank BROski XP (deduped by source_id=print:<job_id>)."""
+async def finish_job(
+    job_id: str,
+    body: dict[str, Any],
+    x_printgenie_secret: str | None = Header(default=None),
+) -> dict[str, Any]:
+    """Mark a print finished. On success, bank BROski XP (deduped by source_id=print:<job_id>).
+    Secret-protected: an open endpoint here would let anyone on the LAN bank XP."""
+    _verify_secret(x_printgenie_secret)
     result = body.get("result", "success")
     model = body.get("model", "unknown")
     awarded = False
@@ -116,8 +122,13 @@ async def finish_job(job_id: str, body: dict[str, Any]) -> dict[str, Any]:
 
 
 @app.post("/preflight")
-async def preflight(body: dict[str, Any]) -> dict[str, Any]:
-    """Run an STL/GLB/OBJ URL through Meshy's async printability check."""
+async def preflight(
+    body: dict[str, Any],
+    x_printgenie_secret: str | None = Header(default=None),
+) -> dict[str, Any]:
+    """Run an STL/GLB/OBJ URL through Meshy's async printability check.
+    Secret-protected so strangers can't burn the Meshy quota."""
+    _verify_secret(x_printgenie_secret)
     model_url = body.get("model_url")
     if not model_url:
         raise HTTPException(status_code=400, detail="model_url required")
@@ -140,7 +151,12 @@ async def jobs(limit: int = 10) -> list[dict[str, Any]]:
 async def status() -> dict[str, Any]:
     """Best-effort live snapshot for the MCP server. Pulls the latest job + PrintGuard reachability."""
     s = get_settings()
-    latest = (await db.recent_jobs(limit=1))[:1] if s.supabase_configured else []
+    latest: list[dict[str, Any]] = []
+    if s.supabase_configured:
+        try:
+            latest = (await db.recent_jobs(limit=1))[:1]
+        except Exception:  # noqa: BLE001 - status is best-effort; a Supabase hiccup must not 500
+            latest = []
     return {
         "printguard_base_url": s.printguard_base_url,
         "latest_job": latest[0] if latest else None,
