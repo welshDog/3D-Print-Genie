@@ -136,7 +136,8 @@ The fake printer drives the full Phase 2/3 path — webhook auth → event log �
 finish → BROski XP — without a Kobra X, Pi, or any creds (everything is fail-soft):
 
 ```bash
-cd service && python -m uvicorn app.main:app --port 8011   # terminal 1
+# terminal 1 — the app does NOT self-load .env, so pass it to uvicorn:
+cd service && python -m uvicorn app.main:app --port 8011 --env-file .env
 python tools/simulate_printguard.py scenario               # terminal 2, from repo root
 ```
 

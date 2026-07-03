@@ -48,3 +48,20 @@ def test_meshy_summarize_tolerates_key_drift():
     # Alternate key names should still be read.
     passed, _ = summarize({"is_watertight": True, "hole_count": 0, "non_manifold_edge_count": 0})
     assert passed is True
+
+
+def test_meshy_summarize_live_nested_shape():
+    # Real response shape verified live 2026-07-03: numbers under printability.metrics.
+    report = {
+        "status": "SUCCEEDED",
+        "printability": {
+            "status": "warning",
+            "error_count": 0,
+            "warning_count": 1,
+            "metrics": {"is_watertight": True, "holes": 0, "non_manifold_edges": 0,
+                        "degenerate_faces": 24, "volume": 15550.5},
+        },
+    }
+    passed, summary = summarize(report)
+    assert passed is True
+    assert "watertight=True" in summary and "status=warning" in summary

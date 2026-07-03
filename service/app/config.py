@@ -24,7 +24,8 @@ class Settings:
 
         # Economy
         self.core_url: str = os.getenv("HYPERCODE_CORE_URL", "http://host.docker.internal:8000")
-        self.award_path: str = os.getenv("ECONOMY_AWARD_PATH", "/economy/award-dev-xp")
+        self.award_path: str = os.getenv("ECONOMY_AWARD_PATH", "/api/v1/economy/award-dev-xp")
+        self.core_api_key: str = os.getenv("HYPERCODE_API_KEY", "")
         self.owner_discord_id: str = os.getenv("OWNER_DISCORD_ID", "418075243404591106")
         self.xp_per_success: int = int(os.getenv("XP_PER_SUCCESS", "50"))
 

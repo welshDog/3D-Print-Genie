@@ -41,6 +41,19 @@ async def insert(table: str, row: dict[str, Any]) -> dict[str, Any]:
         return data[0] if isinstance(data, list) and data else {}
 
 
+async def upsert(table: str, row: dict[str, Any], *, merge: bool = True) -> dict[str, Any]:
+    """PostgREST upsert on the primary key. merge=True overwrites provided columns on conflict;
+    merge=False (ignore-duplicates) leaves an existing row untouched."""
+    headers = _headers(write=True)
+    resolution = "merge-duplicates" if merge else "ignore-duplicates"
+    headers["Prefer"] = f"return=representation,resolution={resolution}"
+    async with httpx.AsyncClient(timeout=15.0) as client:
+        resp = await client.post(f"{_rest_url(table)}?on_conflict=id", json=row, headers=headers)
+        resp.raise_for_status()
+        data = resp.json()
+        return data[0] if isinstance(data, list) and data else {}
+
+
 async def update(table: str, row_id: str, patch: dict[str, Any]) -> dict[str, Any]:
     async with httpx.AsyncClient(timeout=15.0) as client:
         resp = await client.patch(
@@ -65,11 +78,19 @@ async def select(table: str, query: str = "") -> list[dict[str, Any]]:
 # Convenience wrappers ----------------------------------------------------------------------
 
 async def record_event(payload: dict[str, Any]) -> dict[str, Any]:
+    """Log a PrintGuard event. Nothing upstream announces job starts (PrintGuard is camera-only),
+    so the job spine self-heals: first sight of a job_id creates its print_jobs row — otherwise
+    the FK on print_events rejects the insert and the fail-soft callers drop it silently."""
+    job_id = payload.get("job_id")
+    if job_id:
+        await upsert("print_jobs", {"id": job_id, "model": "unknown"}, merge=False)
     return await insert("print_events", payload)
 
 
 async def upsert_job_result(job_id: str, patch: dict[str, Any]) -> dict[str, Any]:
-    return await update("print_jobs", job_id, patch)
+    """True upsert: a finish for a job nobody registered still creates the row (a bare PATCH
+    matches 0 rows and the result is silently lost)."""
+    return await upsert("print_jobs", {"id": job_id, "model": "unknown", **patch})
 
 
 async def recent_jobs(limit: int = 10) -> list[dict[str, Any]]:

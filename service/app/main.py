@@ -105,7 +105,7 @@ async def finish_job(
 
     if get_settings().supabase_configured:
         try:
-            await db.upsert_job_result(job_id, {"result": result, **{
+            await db.upsert_job_result(job_id, {"result": result, "model": model, **{
                 k: body[k] for k in ("ended_at", "duration_mins", "notes") if k in body
             }})
         except Exception:  # noqa: BLE001

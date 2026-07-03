@@ -71,12 +71,21 @@ async def analyze_printability(
 
 
 def summarize(report: dict[str, Any]) -> tuple[bool, str]:
-    """Collapse a Meshy report into (passed, human_summary). Tolerant of key drift."""
-    watertight = report.get("watertight", report.get("is_watertight"))
-    holes = report.get("holes", report.get("hole_count"))
-    non_manifold = report.get("non_manifold_edges", report.get("non_manifold_edge_count"))
+    """Collapse a Meshy report into (passed, human_summary). Tolerant of key drift.
+
+    Live API (verified 2026-07-03) nests the numbers under printability.metrics with an
+    is_watertight key; older/flat shapes are kept as fallbacks."""
+    printability = report.get("printability") or {}
+    metrics = printability.get("metrics") or report
+    watertight = metrics.get("is_watertight", metrics.get("watertight"))
+    holes = metrics.get("holes", metrics.get("hole_count"))
+    non_manifold = metrics.get("non_manifold_edges", metrics.get("non_manifold_edge_count"))
     passed = bool(watertight) and not holes and not non_manifold
-    summary = (
-        f"watertight={watertight} holes={holes} non_manifold_edges={non_manifold}"
-    )
+    summary = f"watertight={watertight} holes={holes} non_manifold_edges={non_manifold}"
+    if printability.get("status"):
+        summary += (
+            f" (meshy status={printability['status']},"
+            f" errors={printability.get('error_count')},"
+            f" warnings={printability.get('warning_count')})"
+        )
     return passed, summary
