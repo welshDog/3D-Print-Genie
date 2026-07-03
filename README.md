@@ -122,7 +122,7 @@ For the complete copy-paste walkthrough (blank SD card → Discord spaghetti ale
 ```bash
 # On a fresh Raspberry Pi OS Lite 64-bit, with Docker installed:
 cd ~ && git clone <this-repo> printgenie && cd printgenie/docker
-cp .env.example .env && nano .env      # paste your Discord webhook URL
+cp .env.example .env && nano .env      # paste your Discord webhook URL (#print-genie channel)
 docker compose up -d
 docker compose logs -f printguard
 # open http://<pi-ip>:8000 → Add Camera (This device) → Add Printer (Camera Only) → Monitor
